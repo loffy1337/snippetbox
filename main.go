@@ -22,6 +22,11 @@ func showSnippet(res http.ResponseWriter, req *http.Request) {
 }
 
 func createSnippet(res http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		res.Header().Set("Allow", http.MethodPost)
+		http.Error(res, "Метод запрещен!", http.StatusMethodNotAllowed)
+		return
+	}
 	res.Write([]byte("Форма создания новой заметки"))
 }
 
