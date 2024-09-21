@@ -1,1 +1,1 @@
-# Golang SnippetBox webapp
+# Golang SnippetBox simple Web-application
