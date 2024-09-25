@@ -1,17 +1,17 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"log"
 	"net/http"
 	"path/filepath"
 )
 
-// Адрес и порт для запуска сервера
-var addr string = "localhost"
-var port string = "8080"
-
 func main() {
+	// Флаги для командой строки
+	addr := flag.String("addr", "localhost:8080", "Сетевой адрес HTTP")
+	flag.Parse()
+
 	// Роуты
 	var mux *http.ServeMux = http.NewServeMux()
 	mux.HandleFunc("/", home)
@@ -22,8 +22,8 @@ func main() {
 	var fileServer http.Handler = http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Printf("Запуск веб-сервера на http://%s:%s\n", addr, port)
-	if err := http.ListenAndServe(fmt.Sprintf("%s:%s", addr, port), mux); err != nil {
+	log.Printf("Запуск веб-сервера на http://%s\n", *addr)
+	if err := http.ListenAndServe(*addr, mux); err != nil {
 		log.Fatal(err)
 	}
 }
