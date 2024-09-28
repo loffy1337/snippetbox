@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -11,6 +12,10 @@ func main() {
 	// Флаги для командой строки
 	addr := flag.String("addr", "localhost:8080", "Сетевой адрес HTTP")
 	flag.Parse()
+
+	// Логгеры
+	var infoLog *log.Logger = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	var errorLog *log.Logger = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Роуты
 	var mux *http.ServeMux = http.NewServeMux()
@@ -22,9 +27,17 @@ func main() {
 	var fileServer http.Handler = http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Printf("Запуск веб-сервера на http://%s\n", *addr)
-	if err := http.ListenAndServe(*addr, mux); err != nil {
-		log.Fatal(err)
+	// Инициализация HTTP сервера
+	var httpServer *http.Server = &http.Server{
+		Addr:     *addr,
+		ErrorLog: errorLog,
+		Handler:  mux,
+	}
+
+	// Запуск HTTP сервера
+	infoLog.Printf("Запуск веб-сервера на http://%s\n", *addr)
+	if err := httpServer.ListenAndServe(); err != nil {
+		errorLog.Fatal(err)
 	}
 }
 
