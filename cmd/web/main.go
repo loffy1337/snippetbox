@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 )
 
 type application struct {
@@ -28,15 +27,8 @@ func main() {
 		infoLog:  infoLog,
 	}
 
-	// Роуты
-	var mux *http.ServeMux = http.NewServeMux()
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet", app.showSnippet)
-	mux.HandleFunc("/snippet/create", app.createSnippet)
-
-	// Роут для обработки статических файлов (css, js, images)
-	var fileServer http.Handler = http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	// Получение роутов
+	var mux *http.ServeMux = app.routes()
 
 	// Инициализация HTTP сервера
 	var httpServer *http.Server = &http.Server{
@@ -50,31 +42,4 @@ func main() {
 	if err := httpServer.ListenAndServe(); err != nil {
 		errorLog.Fatal(err)
 	}
-}
-
-type neuteredFileSystem struct {
-	fs http.FileSystem
-}
-
-func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
-	f, err := nfs.fs.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	s, err := f.Stat()
-	if err != nil {
-		return nil, err
-	}
-	if s.IsDir() {
-		var index string = filepath.Join(path, "index.html")
-		if _, err := nfs.fs.Open(index); err != nil {
-			var closeErr error = f.Close()
-			if closeErr != nil {
-				return nil, closeErr
-			}
-			return nil, err
-		}
-	}
-	return f, nil
 }
