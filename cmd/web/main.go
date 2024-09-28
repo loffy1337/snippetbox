@@ -8,6 +8,11 @@ import (
 	"path/filepath"
 )
 
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+}
+
 func main() {
 	// Флаги для командой строки
 	addr := flag.String("addr", "localhost:8080", "Сетевой адрес HTTP")
@@ -17,11 +22,17 @@ func main() {
 	var infoLog *log.Logger = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	var errorLog *log.Logger = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	// Инициализация структуры с зависимостями
+	var app *application = &application{
+		errorLog: errorLog,
+		infoLog:  infoLog,
+	}
+
 	// Роуты
 	var mux *http.ServeMux = http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet", app.showSnippet)
+	mux.HandleFunc("/snippet/create", app.createSnippet)
 
 	// Роут для обработки статических файлов (css, js, images)
 	var fileServer http.Handler = http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
