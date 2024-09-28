@@ -10,7 +10,7 @@ import (
 // Контроллер домашней страницы
 func (app *application) home(res http.ResponseWriter, req *http.Request) {
 	if req.URL.Path != "/" {
-		http.NotFound(res, req)
+		app.notFound(res)
 		return
 	}
 	var files []string = []string{
@@ -20,13 +20,11 @@ func (app *application) home(res http.ResponseWriter, req *http.Request) {
 	}
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.errorLog.Println(err.Error())
-		http.Error(res, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(res, err)
 		return
 	}
 	if err = ts.Execute(res, nil); err != nil {
-		app.errorLog.Println(err.Error())
-		http.Error(res, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(res, err)
 	}
 }
 
@@ -34,7 +32,7 @@ func (app *application) home(res http.ResponseWriter, req *http.Request) {
 func (app *application) showSnippet(res http.ResponseWriter, req *http.Request) {
 	id, err := strconv.Atoi(req.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		http.NotFound(res, req)
+		app.notFound(res)
 		return
 	}
 	res.Write([]byte(fmt.Sprintf("Заметка с ID: %d\n", id)))
@@ -47,7 +45,7 @@ func (app *application) showSnippet(res http.ResponseWriter, req *http.Request) 
 func (app *application) createSnippet(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		res.Header().Set("Allow", http.MethodPost)
-		http.Error(res, "Метод запрещен!", http.StatusMethodNotAllowed)
+		app.clientError(res, http.StatusMethodNotAllowed)
 		return
 	}
 	res.Write([]byte("Форма создания новой заметки"))

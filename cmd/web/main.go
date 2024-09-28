@@ -15,7 +15,7 @@ type application struct {
 
 func main() {
 	// Флаги для командой строки
-	addr := flag.String("addr", "localhost:8080", "Сетевой адрес HTTP")
+	var addr *string = flag.String("addr", "localhost:8080", "Сетевой адрес HTTP")
 	flag.Parse()
 
 	// Логгеры
@@ -67,9 +67,9 @@ func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
 		return nil, err
 	}
 	if s.IsDir() {
-		index := filepath.Join(path, "index.html")
+		var index string = filepath.Join(path, "index.html")
 		if _, err := nfs.fs.Open(index); err != nil {
-			closeErr := f.Close()
+			var closeErr error = f.Close()
 			if closeErr != nil {
 				return nil, closeErr
 			}
